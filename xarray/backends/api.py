@@ -649,6 +649,7 @@ def open_mfdataset(paths, chunks=None, concat_dim=_CONCAT_DIM_DEFAULT,
     .. [1] http://xarray.pydata.org/en/stable/dask.html
     .. [2] http://xarray.pydata.org/en/stable/dask.html#chunking-and-performance
     """  # noqa
+    print("open_mfdataset")
     if isinstance(paths, str):
         if is_remote_uri(paths):
             raise ValueError(
@@ -695,6 +696,7 @@ def open_mfdataset(paths, chunks=None, concat_dim=_CONCAT_DIM_DEFAULT,
         open_ = open_dataset
         getattr_ = getattr
 
+    print(f"dataset opened: open_kwargs = {open_kwargs}")
     datasets = [open_(p, **open_kwargs) for p in paths]
     file_objs = [getattr_(ds, '_file_obj') for ds in datasets]
     if preprocess is not None:
@@ -703,7 +705,9 @@ def open_mfdataset(paths, chunks=None, concat_dim=_CONCAT_DIM_DEFAULT,
     if parallel:
         # calling compute here will return the datasets/file_objs lists,
         # the underlying datasets will still be stored as dask arrays
+        print( "dask.compute")
         datasets, file_objs = dask.compute(datasets, file_objs)
+        print("dask.compute- complete")
 
     # Close datasets in case of a ValueError
     try:
@@ -722,6 +726,7 @@ def open_mfdataset(paths, chunks=None, concat_dim=_CONCAT_DIM_DEFAULT,
             ds.close()
         raise
 
+    print("dask.combine- complete")
     combined._file_obj = _MultiFileCloser(file_objs)
     combined.attrs = datasets[0].attrs
     return combined
